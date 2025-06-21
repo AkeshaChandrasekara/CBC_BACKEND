@@ -60,3 +60,17 @@ export function loginUser(req,res){
           } 
     })
 }
+
+export function deleteUser(req,res){
+    User.findOneAndDelete({email:req.body.email}).then((user)=>{
+        if(user){
+            res.json({
+                message:"user deleted"
+            })
+        }else{
+            res.json({
+                message:"user not found"
+            })
+        }
+    })
+}
