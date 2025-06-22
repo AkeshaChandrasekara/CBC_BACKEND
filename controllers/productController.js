@@ -26,11 +26,24 @@ export function createProduct(req, res) {
    });
 }
 
-export function getProducts(req,res){
-   Product.find({}).then((products)=>{
-    res.json(products)
-   });
-   
+export async function getProducts(req, res) {
+    try {
+        const products = await Product.find({});
+        
+        return res.status(200).json({
+            success: true,
+            count: products.length,
+            data: products
+        });
+
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error fetching products',
+            error: error.message
+        });
+    }
 }
    
 

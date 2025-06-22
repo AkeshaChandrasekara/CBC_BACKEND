@@ -4,7 +4,7 @@ import { createOrder, getOrders } from '../controllers/orderController.js';
 const orderRouter= express.Router();
 
 orderRouter.post('/',createOrder)
-orderRouter.post('/',getOrders)
+orderRouter.get('/',getOrders)
 
 
 export default orderRouter;
