@@ -1,4 +1,5 @@
 import Order  from "../models/order.js";
+import Product from "../models/product.js";
 import  {isCustomer } from "./userController.js";
 
 export async function createOrder(req, res) {
@@ -35,6 +36,44 @@ export async function createOrder(req, res) {
     }
 
 const newOrderData = req.body
+const newProductArray= []
+for(let i = 0; i < req.body.orderedItems.length; i++) {
+  //console.log(req.body.newOrderData.orderedItems[i].product)
+  //newProductArray.push(req.body.orderedItems[i].product)
+ const products= await Product.findOne({
+  productId: req.body.orderedItems[i].productId
+ })
+  if(products==null){
+    res.json({
+      message: "Product not found"})
+  return
+  }
+  newProductArray[i]={
+    productId: products.productId,
+    price: products.price,
+    quantity: req.body.orderedItems[i].quantity,
+    image: products.image[0]
+  }
+
+   
+  }
+console.log(newProductArray)
+newOrderData.orderedItems = newProductArray;
+
+if (newProductArray.length === 0) {
+    return res.status(400).json({ 
+      message: "No items in the order" 
+    });
+  }
+  else {
+    for (let i = 0; i < newProductArray.length; i++) {
+      const product = newProduct
+  }
+
+  };
+ 
+//newOrderData.product = newProductArray;
+//newOrderData.date = new Date()
 newOrderData.orderId = orderId;
 newOrderData.email = req.user.email;
 
