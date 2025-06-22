@@ -103,10 +103,10 @@ export function isAdmin(req){
     if(req.user==null){
         return false
     }
-    if(req.user.type=="admin"){
-        return true
-    }else{
+    if(req.user.type!="admin"){
         return false
+    }else{
+        return true
     }
 }
 
@@ -114,10 +114,10 @@ export function isCustomer(req){
   if(req.user==null){
         return false
     }
-    if(req.user.type=="customer"){
-        return true
-    }else{
+    if(req.user.type!="customer"){
         return false
+    }else{
+        return true
     }
 }
 
