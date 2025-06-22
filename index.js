@@ -4,7 +4,6 @@ import mongoose from "mongoose";
 import userRouter from "./routes/userRouter.js";
 import res from "express/lib/response.js";
 import jwt from "jsonwebtoken";
-import productRouter from "./routes/productRouter.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -28,7 +27,7 @@ app.use((res,req,next)=>{
 })
 
 app.use("/api/users",userRouter);
-app.use("/api/products",productRouter);
+
 
 
 app.listen(5000,
