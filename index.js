@@ -27,7 +27,7 @@ app.use((res,req,next)=>{
 })
 
 app.use("/api/users",userRouter);
-//app.use("/api/products",productRouter);
+app.use("/api/products",productRouter);
 
 
 app.listen(5000,
