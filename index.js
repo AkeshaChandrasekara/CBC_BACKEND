@@ -8,9 +8,6 @@ import productRouter from "./routes/productRouter.js";
 import orderRouter from "./routes/orderRoute.js";
 
 const app = express();
-
-
-
 const mongoUrl=process.env.MONGO_DB_URI
 
 mongoose.connect(mongoUrl,{});
