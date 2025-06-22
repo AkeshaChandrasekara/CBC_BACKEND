@@ -10,7 +10,10 @@ export async function createOrder(req, res) {
 
     }
   try {
-    const latestOrder = await Order.find().sort({ date: -1 }).limit(1);
+   // const latestOrder = await Order.find().sort({ date: -1 }).limit(1);
+    const latestOrder = await Order.find().sort({ date: -1 }).limit(1)
+      .maxTimeMS(30000)
+      .exec();
 
     let orderId;
 
@@ -38,10 +41,41 @@ newOrderData.email = req.user.email;
 const order = new Order(newOrderData);
 await order.save();
 
+ return res.status(201).json({
+            message: "Order created successfully",
+            order: order
+        });
+
   } catch (error) {
     res.status(500).json({ 
       message: "Failed to create order",
       error: error.message 
+    });
+  }
+}
+
+export async function getOrders(req, res) {
+  
+    
+  try {
+    if (isCustomer(req)) {
+    const orders = await Order.find({ email: req.user.email });
+
+    res.json(orders);
+    return;
+    }else if(isAdmin(req)){
+      const orders = await Order.find({});
+
+      res.json(orders);
+      return;
+    }else{
+      res.json({
+        message: "Please login to view orders"
+      })
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
     });
   }
 }

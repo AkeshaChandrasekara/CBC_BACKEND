@@ -2,6 +2,7 @@ import bodyParser from "body-parser";
 import express from "express";
 import mongoose from "mongoose";
 import userRouter from "./routes/userRouter.js";
+import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 import productRouter from "./routes/productRouter.js";

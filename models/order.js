@@ -50,7 +50,7 @@ const orderSchema= mongoose.Schema({
     },
     address:{
         type:String,
-        required:true
+       required:true
     },
     city:{
         type:String,
@@ -58,7 +58,7 @@ const orderSchema= mongoose.Schema({
     },
     phone:{
         type:String,
-        required:true
+       required:true
     }
     
 })
