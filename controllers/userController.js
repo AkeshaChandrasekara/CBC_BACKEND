@@ -63,7 +63,8 @@ export function loginUser(req,res){
                     lastName:user.lastName,
 
                 
-                },"cbc-secrate-key 8000")
+                }, process.env.JWT_SECRET
+)
                 
                 
                 res.json({

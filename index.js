@@ -17,11 +17,31 @@ connection.once("open",()=>{
     console.log("mongodb connected")
 })
 app.use(bodyParser.json());
-app.use((res,req,next)=>{
- // next();
- console.log(req)
- next();
-})
+
+app.use(
+    (req,res,next)=>{
+        const value = req.header("Authorization")
+        if(value != null){
+            const token = value.replace("Bearer ","")
+            jwt.verify(
+                token,
+                process.env.JWT_SECRET,
+                (err,decoded)=>{
+                    if(decoded == null){
+                        res.status(403).json({
+                            message : "Unauthorized"
+                        })
+                    }else{
+                        req.user = decoded
+                        next()
+                    }                    
+                }
+            )
+        }else{
+            next()
+        }        
+    }
+)
 
 app.use("/api/users",userRouter);
 app.use("/api/products",productRouter);
