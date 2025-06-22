@@ -5,6 +5,7 @@ import userRouter from "./routes/userRouter.js";
 import dotenv from "dotenv";
 dotenv.config();
 import productRouter from "./routes/productRouter.js";
+import orderRouter from "./routes/orderRoute.js";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use((res,req,next)=>{
 
 app.use("/api/users",userRouter);
 app.use("/api/products",productRouter);
+app.use("/api/orders",orderRouter);
 
 
 
