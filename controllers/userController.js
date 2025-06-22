@@ -99,6 +99,27 @@ export function deleteUser(req,res){
     })
 }
 
+export function isAdmin(req){
+    if(req.user==null){
+        return false
+    }
+    if(req.user.type=="admin"){
+        return true
+    }else{
+        return false
+    }
+}
+
+export function isCustomer(req){
+  if(req.user==null){
+        return false
+    }
+    if(req.user.type=="customer"){
+        return true
+    }else{
+        return false
+    }
+}
 
 //admin.user@example.com"
 //adminPass123!
