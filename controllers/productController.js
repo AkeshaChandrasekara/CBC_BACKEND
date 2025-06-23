@@ -18,12 +18,13 @@ export function createProduct(req, res) {
       res.json({
         message:'Product created successfully',
       })
-   }).catch((error)=>{
+   }).catch((err)=>{
      res.json({
         message:'Error creating product',
+        error:err
     
       })
-   });
+   },[]);
 }
 
 export async function getProducts(req, res) {
