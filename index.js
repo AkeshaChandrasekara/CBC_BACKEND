@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import productRouter from "./routes/productRouter.js";
 import orderRouter from "./routes/orderRoute.js";
+import cors from "cors";
 
 const app = express();
 const mongoUrl=process.env.MONGO_DB_URI
@@ -18,6 +19,7 @@ connection.once("open",()=>{
     console.log("mongodb connected")
 })
 app.use(bodyParser.json());
+app.use (cors());
 
 app.use(
     (req,res,next)=>{
