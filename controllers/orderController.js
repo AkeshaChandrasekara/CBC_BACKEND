@@ -1,94 +1,78 @@
-import Order  from "../models/order.js";
+import Order from "../models/order.js";
 import Product from "../models/product.js";
-import  {isCustomer } from "./userController.js";
+import { isAdmin, isCustomer } from "./userController.js";
 
 export async function createOrder(req, res) {
-
-    if (!isCustomer){
-    res.status(400).json({ 
-      message: "You are not a customer. Please login as a customer to create an order." 
+  if (!isCustomer) {
+    res.json({
+      message: "Please login as customer to create orders",
     });
+  }
 
-    }
   try {
-   // const latestOrder = await Order.find().sort({ date: -1 }).limit(1);
-    const latestOrder = await Order.find().sort({ date: -1 }).limit(1)
-      .maxTimeMS(30000)
-      .exec();
+    const latestOrder = await Order.find().sort({ orderId: -1 }).limit(1);
+    console.log(latestOrder);
 
     let orderId;
 
-    if (latestOrder.length === 0) {
+    if (latestOrder.length == 0) {
       orderId = "CBC0001";
     } else {
       const currentOrderId = latestOrder[0].orderId;
+
       const numberString = currentOrderId.replace("CBC", "");
-      const number = parseInt(numberString) + 1;
-    
-      const paddedNumber = number.toString().padStart(4, '0');
-      orderId = `CBC${paddedNumber}`;
-      
-      if (number > 9999) {
-        return res.status(400).json({ 
-          message: "Order ID limit reached (maximum 9999 orders)" 
-        });
-      }
+
+      const number = parseInt(numberString);
+
+      const newNumber = (number + 1).toString().padStart(4, "0");
+
+      orderId = "CBC" + newNumber;
     }
 
-const newOrderData = req.body
-const newProductArray= []
-for(let i = 0; i < req.body.orderedItems.length; i++) {
-  //console.log(req.body.newOrderData.orderedItems[i].product)
-  //newProductArray.push(req.body.orderedItems[i].product)
- const products= await Product.findOne({
-  productId: req.body.orderedItems[i].productId
- })
-  if(products==null){
-    res.json({
-      message: "Product not found"})
-  return
-  }
-  newProductArray[i]={
-    productId: products.productId,
-    price: products.price,
-    quantity: req.body.orderedItems[i].quantity,
-    image: products.image[0]
-  }
+    const newOrderData = req.body;
 
-   
-  }
-console.log(newProductArray)
-newOrderData.orderedItems = newProductArray;
+    const newProductArray = [];
 
-if (newProductArray.length === 0) {
-    return res.status(400).json({ 
-      message: "No items in the order" 
-    });
-  }
-  else {
-    for (let i = 0; i < newProductArray.length; i++) {
-      const product = newProduct
-  }
+    for (let i = 0; i < newOrderData.orderedItems.length; i++) {
+      const product = await Product.findOne({
+        productId: newOrderData.orderedItems[i].productId,
+      });
 
-  };
- 
-//newOrderData.product = newProductArray;
-//newOrderData.date = new Date()
-newOrderData.orderId = orderId;
-newOrderData.email = req.user.email;
-
-const order = new Order(newOrderData);
-await order.save();
-
- return res.status(201).json({
-            message: "Order created successfully",
-            order: order
+      if (product == null) {
+        res.json({
+          message:
+            "Product with id " +
+            newOrderData.orderedItems[i].productId +
+            " not found",
         });
+        return;
+      }
 
+      newProductArray[i] = {
+        name: product.productName,
+        price: product.lastPrice,
+        quantity: newOrderData.orderedItems[i].qty,
+        image: product.images[0],
+      };
+    }
+    console.log(newProductArray);
+
+    newOrderData.orderedItems = newProductArray;
+
+    newOrderData.orderId = orderId;
+    newOrderData.email = req.user.email;
+
+    const order = new Order(newOrderData);
+
+    const savedOrder = await order.save();
+
+    res.json({
+      message: "Order created",
+      order : savedOrder
+    });
   } catch (error) {
-    res.status(500).json({ 
-      message: "Failed to create order",
-      error: error.message 
+    res.status(500).json({
+      message: error.message,
     });
   }
 }
@@ -118,3 +102,101 @@ export async function getOrders(req, res) {
     });
   }
 }
+
+export async function getQuote(req, res) {
+  
+  try {
+    const newOrderData = req.body;
+
+    const newProductArray = [];
+
+    let total = 0;
+    let labeledTotal = 0;
+    console.log(req.body)
+
+    for (let i = 0; i < newOrderData.orderedItems.length; i++) {
+      const product = await Product.findOne({
+        productId: newOrderData.orderedItems[i].productId,
+      });
+
+      if (product == null) {
+        res.json({
+          message:
+            "Product with id " +
+            newOrderData.orderedItems[i].productId +
+            " not found",
+        });
+        return;
+      }
+      labeledTotal += product.price * newOrderData.orderedItems[i].qty;
+      total += product.lastPrice * newOrderData.orderedItems[i].qty;
+      newProductArray[i] = {
+        name: product.productName,
+        price: product.lastPrice,
+        labeledPrice: product.price,
+        quantity: newOrderData.orderedItems[i].qty,
+        image: product.images[0],
+      };
+    }
+    console.log(newProductArray);
+    newOrderData.orderedItems = newProductArray;
+    newOrderData.total = total;
+
+    res.json({
+      orderedItems: newProductArray,
+      total: total,
+      labeledTotal: labeledTotal,
+    });
+
+
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+}
+
+export async function updateOrder(req, res) {
+  if (!isAdmin(req)) {
+    res.json({
+      message: "Please login as admin to update orders",
+    });
+  }
+  
+  try {
+    const orderId = req.params.orderId;
+
+    const order = await Order.findOne({
+      orderId: orderId,
+    });
+
+    if (order == null) {
+      res.status(404).json({
+        message: "Order not found",
+      })
+      return;
+    }
+
+    const notes = req.body.notes;
+    const status = req.body.status;
+
+    const updateOrder = await Order.findOneAndUpdate(
+      { orderId: orderId },
+      { notes: notes, status: status }
+    );
+
+    res.json({
+      message: "Order updated",
+      updateOrder: updateOrder
+    });
+
+  }catch(error){
+
+    
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+}
+
+
