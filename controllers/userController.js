@@ -244,7 +244,6 @@ export async function toggleBlockUser(req, res) {
 }
 
 
-
 export async function forgotPassword(req, res) {
   const { email } = req.body;
   
@@ -261,49 +260,56 @@ export async function forgotPassword(req, res) {
       { expiresIn: '1h' }
     );
 
-    
     const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, 
-  auth: {
-    user: process.env.EMAIL_USERNAME,
-    pass: process.env.EMAIL_PASSWORD
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USERNAME, 
+        pass: process.env.EMAIL_PASSWORD 
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    
     const mailOptions = {
-      from: `"Your App Name" <${process.env.EMAIL_USERNAME}>`,
-      to: email,
+      from: `"Crystal Beauty Clear" <${process.env.EMAIL_USERNAME}>`, 
+      to: email, 
       subject: 'Password Reset Request',
       text: `You requested a password reset. Please click the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 1 hour.`,
-      html: `<p>You requested a password reset. Please click the following link to reset your password:</p>
-             <p><a href="${resetUrl}">${resetUrl}</a></p>
-             <p>This link will expire in 1 hour.</p>`
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #D4AF37;">Password Reset Request</h2>
+          <p>You requested a password reset for your Crystal Beauty Clear account.</p>
+          <p>Please click the button below to reset your password:</p>
+          <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #D4AF37; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0;">
+            Reset Password
+          </a>
+          <p>This link will expire in 1 hour.</p>
+          <p>If you didn't request this, please ignore this email.</p>
+          <hr>
+          <p style="font-size: 12px; color: #777;">Crystal Beauty Clear Team</p>
+        </div>
+      `
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Error sending email:', error);
-        return res.status(500).json({ message: "Error sending reset email" });
-      }
-      console.log('Message sent: %s', info.messageId);
-      res.json({ 
-        message: "Password reset link sent to email",
-        resetToken 
-      });
+    await transporter.sendMail(mailOptions);
+    
+    res.json({ 
+      message: "Password reset link sent to email"
     });
 
   } catch (error) {
     console.error('Error in forgotPassword:', error);
-    res.status(500).json({ message: "Error processing request" });
+    res.status(500).json({ 
+      message: "Error processing request",
+      error: error.message 
+    });
   }
 }
-
 export async function resetPassword(req, res) {
   const { token } = req.params;
   const { password } = req.body;
