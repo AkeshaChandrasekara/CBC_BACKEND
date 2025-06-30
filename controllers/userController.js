@@ -259,8 +259,6 @@ export async function forgotPassword(req, res) {
       { expiresIn: '1h' }
     );
 
-    // In a real app, you would send an email here with the reset link
-    // For demo purposes, we'll just return the token
     res.json({ 
       message: "Password reset link sent to email",
       resetToken 
