@@ -243,7 +243,6 @@ export async function toggleBlockUser(req, res) {
   }
 }
 
-
 export async function forgotPassword(req, res) {
   const { email } = req.body;
   
