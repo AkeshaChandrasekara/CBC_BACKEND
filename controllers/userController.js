@@ -241,3 +241,65 @@ export async function toggleBlockUser(req, res) {
     res.status(500).json({ message: "Error updating user status" });
   }
 }
+
+
+
+export async function forgotPassword(req, res) {
+  const { email } = req.body;
+  
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.json({ message: "If this email exists, a reset link has been sent" });
+    }
+
+    const resetToken = jwt.sign(
+      { email: user.email, id: user._id },
+      process.env.SECRET,
+      { expiresIn: '1h' }
+    );
+
+    // In a real app, you would send an email here with the reset link
+    // For demo purposes, we'll just return the token
+    res.json({ 
+      message: "Password reset link sent to email",
+      resetToken 
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Error processing request" });
+  }
+}
+
+export async function resetPassword(req, res) {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid token" });
+    }
+
+    user.password = bcrypt.hashSync(password, 10);
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
+
+  } catch (error) {
+    res.status(400).json({ message: "Invalid or expired token" });
+  }
+}
+
+export async function verifyResetToken(req, res) {
+  const { token } = req.params;
+  
+  try {
+    jwt.verify(token, process.env.SECRET);
+    res.json({ valid: true });
+  } catch (error) {
+    res.json({ valid: false });
+  }
+}

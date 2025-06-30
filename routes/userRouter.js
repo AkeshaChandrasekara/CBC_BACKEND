@@ -1,5 +1,7 @@
 import express from 'express';
-import { createUser, googleLogin, loginUser, verifyUser ,getAllUsers, deleteUser, toggleBlockUser } from '../controllers/userController.js';
+import { createUser, googleLogin, loginUser, verifyUser ,getAllUsers, deleteUser, toggleBlockUser
+  ,forgotPassword,resetPassword, verifyResetToken
+ } from '../controllers/userController.js';
 import jwt from 'jsonwebtoken';
 
 const userRouter = express.Router();
@@ -34,7 +36,9 @@ userRouter.delete("/:id", verifyToken, deleteUser);
 userRouter.put("/:id/block", verifyToken, toggleBlockUser);
 userRouter.get("/", verifyToken, verifyUser);
 
-
+userRouter.post("/forgot-password", forgotPassword);
+userRouter.post("/reset-password/:token", resetPassword);
+userRouter.get("/verify-reset-token/:token", verifyResetToken);
 
 
 export default userRouter;
