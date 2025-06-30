@@ -1,4 +1,5 @@
 import User from "../models/user.js";
+import nodemailer from 'nodemailer';
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
@@ -250,6 +251,7 @@ export async function forgotPassword(req, res) {
   try {
     const user = await User.findOne({ email });
     if (!user) {
+    
       return res.json({ message: "If this email exists, a reset link has been sent" });
     }
 
@@ -259,12 +261,40 @@ export async function forgotPassword(req, res) {
       { expiresIn: '1h' }
     );
 
-    res.json({ 
-      message: "Password reset link sent to email",
-      resetToken 
+    
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD
+      }
+    });
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    const mailOptions = {
+      from: `"Your App Name" <${process.env.EMAIL_USERNAME}>`,
+      to: email,
+      subject: 'Password Reset Request',
+      text: `You requested a password reset. Please click the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 1 hour.`,
+      html: `<p>You requested a password reset. Please click the following link to reset your password:</p>
+             <p><a href="${resetUrl}">${resetUrl}</a></p>
+             <p>This link will expire in 1 hour.</p>`
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email:', error);
+        return res.status(500).json({ message: "Error sending reset email" });
+      }
+      console.log('Message sent: %s', info.messageId);
+      res.json({ 
+        message: "Password reset link sent to email",
+        resetToken 
+      });
     });
 
   } catch (error) {
+    console.error('Error in forgotPassword:', error);
     res.status(500).json({ message: "Error processing request" });
   }
 }
