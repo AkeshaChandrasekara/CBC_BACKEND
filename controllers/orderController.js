@@ -1,6 +1,10 @@
 import Order from "../models/order.js";
 import Product from "../models/product.js";
 import { isAdmin, isCustomer } from "./userController.js";
+import Stripe from 'stripe';
+import 'dotenv/config';
+
+const stripe = new Stripe(process.env.VITE_STRIPE_SECRET_KEY);
 
 export async function createOrder(req, res) {
   if (!isCustomer) {
@@ -200,3 +204,39 @@ export async function updateOrder(req, res) {
 }
 
 
+export async function createPaymentIntent(req, res) {
+  if (!isCustomer(req)) {
+    return res.status(403).json({
+      message: "Please login as customer to create payment",
+    });
+  }
+
+  try {
+    const { amount, name, address, phone, orderedItems } = req.body;
+
+    // Create a PaymentIntent with the order amount and currency
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount), // amount in smallest currency unit (cents)
+      currency: 'lkr',
+      metadata: {
+        customer_name: name,
+        customer_address: address,
+        customer_phone: phone,
+        products: JSON.stringify(orderedItems.map(item => ({
+          id: item.productId,
+          name: item.name,
+          quantity: item.qty
+        })))
+      }
+    });
+
+    res.json({
+      clientSecret: paymentIntent.client_secret
+    });
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).json({
+      message: error.message
+    });
+  }
+}
