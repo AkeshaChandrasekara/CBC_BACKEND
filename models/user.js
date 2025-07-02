@@ -28,7 +28,7 @@ const userSchema = mongoose.Schema({
   },
   profilePicture : {
     type : String,
-    default : "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?t=st=1731770840~exp=1731774440~hmac=0f8ac074c2321289f63858728e073c0d5946ea6cb542c3b259a88e367a7dde25&w=740"
+    default : "https://static.vecteezy.com/system/resources/thumbnails/048/926/072/small_2x/gold-membership-icon-default-avatar-profile-icon-membership-icon-social-media-user-image-illustration-vector.jpg"
   }
 })
 
