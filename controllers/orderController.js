@@ -240,22 +240,3 @@ export async function createPaymentIntent(req, res) {
     });
   }
 }
-
-
-export async function checkIfUserOrderedProduct(req, res) {
-  try {
-    const { productId } = req.params;
-    const userEmail = req.user.email;
-    
-    const hasOrdered = await Order.exists({
-      email: userEmail,
-      "orderedItems.productId": productId,
-     
-      status: { $exists: true } 
-    });
-    
-    res.json({ hasOrdered });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-}
