@@ -12,7 +12,6 @@ const productSchema = new mongoose.Schema({
     },
     altNames:[{
         type: String,
-       // required: true
     }],
     images:[{
         type: String,
@@ -21,20 +20,28 @@ const productSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-   lastPrice:{
+    lastPrice:{
         type: Number,
         required: true
-  },
-   stock:{
+    },
+    stock:{
         type: Number,
         required: true
-   },
-   description:{
+    },
+    description:{
         type: String,
         required: true
-   }
-   
-
+    },
+    reviews: [{
+        email: String,
+        rating: Number,
+        comment: String,
+        date: { type: Date, default: Date.now }
+    }],
+    rating: {
+        type: Number,
+        default: 0
+    }
 })
 
 const Product = mongoose.model('Product', productSchema);

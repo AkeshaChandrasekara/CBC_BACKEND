@@ -7,34 +7,28 @@ import 'dotenv/config';
 const stripe = new Stripe(process.env.VITE_STRIPE_SECRET_KEY);
 
 export async function createOrder(req, res) {
-  if (!isCustomer) {
-    res.json({
+  if (!isCustomer(req)) {
+    return res.status(403).json({
       message: "Please login as customer to create orders",
     });
   }
 
   try {
     const latestOrder = await Order.find().sort({ orderId: -1 }).limit(1);
-    console.log(latestOrder);
+    console.log("Latest order:", latestOrder);
 
     let orderId;
-
     if (latestOrder.length == 0) {
       orderId = "CBC0001";
     } else {
       const currentOrderId = latestOrder[0].orderId;
-
       const numberString = currentOrderId.replace("CBC", "");
-
       const number = parseInt(numberString);
-
       const newNumber = (number + 1).toString().padStart(4, "0");
-
       orderId = "CBC" + newNumber;
     }
 
     const newOrderData = req.body;
-
     const newProductArray = [];
 
     for (let i = 0; i < newOrderData.orderedItems.length; i++) {
@@ -43,38 +37,35 @@ export async function createOrder(req, res) {
       });
 
       if (product == null) {
-        res.json({
-          message:
-            "Product with id " +
-            newOrderData.orderedItems[i].productId +
-            " not found",
+        return res.status(404).json({
+          message: `Product with id ${newOrderData.orderedItems[i].productId} not found`,
         });
-        return;
       }
 
       newProductArray[i] = {
+        productId: product.productId,
         name: product.productName,
         price: product.lastPrice,
         quantity: newOrderData.orderedItems[i].qty,
         image: product.images[0],
       };
     }
-    console.log(newProductArray);
+    console.log("New order items:", newProductArray);
 
     newOrderData.orderedItems = newProductArray;
-
     newOrderData.orderId = orderId;
     newOrderData.email = req.user.email;
 
     const order = new Order(newOrderData);
-
     const savedOrder = await order.save();
+    console.log("Saved order:", savedOrder);
 
     res.json({
       message: "Order created",
-      order : savedOrder
+      order: savedOrder
     });
-  } catch (error) {
+  }catch (error) {
+    console.error("Error creating order:", error);
     res.status(500).json({
       message: error.message,
     });
@@ -82,25 +73,24 @@ export async function createOrder(req, res) {
 }
 
 export async function getOrders(req, res) {
-  
-    
   try {
     if (isCustomer(req)) {
-    const orders = await Order.find({ email: req.user.email });
-
-    res.json(orders);
-    return;
-    }else if(isAdmin(req)){
-      const orders = await Order.find({});
-
+      const orders = await Order.find({ email: req.user.email });
+      console.log("Fetched orders for customer:", orders);
       res.json(orders);
       return;
-    }else{
-      res.json({
+    } else if (isAdmin(req)) {
+      const orders = await Order.find({});
+      console.log("Fetched orders for admin:", orders);
+      res.json(orders);
+      return;
+    } else {
+      return res.status(401).json({
         message: "Please login to view orders"
-      })
+      });
     }
   } catch (error) {
+    console.error("Error fetching orders:", error);
     res.status(500).json({
       message: error.message,
     });
@@ -108,15 +98,11 @@ export async function getOrders(req, res) {
 }
 
 export async function getQuote(req, res) {
-  
   try {
     const newOrderData = req.body;
-
     const newProductArray = [];
-
     let total = 0;
     let labeledTotal = 0;
-    console.log(req.body)
 
     for (let i = 0; i < newOrderData.orderedItems.length; i++) {
       const product = await Product.findOne({
@@ -124,17 +110,14 @@ export async function getQuote(req, res) {
       });
 
       if (product == null) {
-        res.json({
-          message:
-            "Product with id " +
-            newOrderData.orderedItems[i].productId +
-            " not found",
+        return res.status(404).json({
+          message: `Product with id ${newOrderData.orderedItems[i].productId} not found`,
         });
-        return;
       }
       labeledTotal += product.price * newOrderData.orderedItems[i].qty;
       total += product.lastPrice * newOrderData.orderedItems[i].qty;
       newProductArray[i] = {
+        productId: product.productId,
         name: product.productName,
         price: product.lastPrice,
         labeledPrice: product.price,
@@ -142,7 +125,7 @@ export async function getQuote(req, res) {
         image: product.images[0],
       };
     }
-    console.log(newProductArray);
+    console.log("Quote items:", newProductArray);
     newOrderData.orderedItems = newProductArray;
     newOrderData.total = total;
 
@@ -151,9 +134,8 @@ export async function getQuote(req, res) {
       total: total,
       labeledTotal: labeledTotal,
     });
-
-
   } catch (error) {
+    console.error("Error generating quote:", error);
     res.status(500).json({
       message: error.message,
     });
@@ -162,23 +144,19 @@ export async function getQuote(req, res) {
 
 export async function updateOrder(req, res) {
   if (!isAdmin(req)) {
-    res.json({
+    return res.status(403).json({
       message: "Please login as admin to update orders",
     });
   }
   
   try {
     const orderId = req.params.orderId;
-
-    const order = await Order.findOne({
-      orderId: orderId,
-    });
+    const order = await Order.findOne({ orderId });
 
     if (order == null) {
-      res.status(404).json({
+      return res.status(404).json({
         message: "Order not found",
-      })
-      return;
+      });
     }
 
     const notes = req.body.notes;
@@ -186,23 +164,21 @@ export async function updateOrder(req, res) {
 
     const updateOrder = await Order.findOneAndUpdate(
       { orderId: orderId },
-      { notes: notes, status: status }
+      { notes: notes, status: status },
+      { new: true }
     );
 
     res.json({
       message: "Order updated",
       updateOrder: updateOrder
     });
-
-  }catch(error){
-
-    
+  } catch (error) {
+    console.error("Error updating order:", error);
     res.status(500).json({
       message: error.message,
     });
   }
 }
-
 
 export async function createPaymentIntent(req, res) {
   if (!isCustomer(req)) {
@@ -213,10 +189,9 @@ export async function createPaymentIntent(req, res) {
 
   try {
     const { amount, name, address, phone, orderedItems } = req.body;
-
     
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount), 
+      amount: Math.round(amount),
       currency: 'lkr',
       metadata: {
         customer_name: name,
