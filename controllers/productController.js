@@ -84,7 +84,10 @@ export async function getProductById(req, res) {
   try {
     const productId = req.params.productId;
 
-    const product = await Product.findOne({ productId: productId });
+    const product = await Product.findOne({ productId: productId })
+    .populate('reviews'); 
+
+  
 
     res.json(product);
   } catch (e) {
