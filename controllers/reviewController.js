@@ -1,5 +1,6 @@
 import Review from "../models/review.js";
 import Order from "../models/order.js";
+import Product from "../models/product.js"; 
 import { isCustomer } from "./userController.js";
 
 export async function createReview(req, res) {
@@ -12,25 +13,28 @@ export async function createReview(req, res) {
   try {
     const { productId, rating, comment } = req.body;
     const email = req.user.email;
+    const product = await Product.findOne({ productId });
+    if (!product) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
     const hasOrdered = await Order.exists({
       email: email,
-      "orderedItems.name": { $exists: true }, 
-      $or: [
-        { "orderedItems.productId": productId },
-        { "orderedItems.name": productId } 
-      ]
+      "orderedItems.name": product.productName,
     });
 
     if (!hasOrdered) {
       return res.status(400).json({
-        message: "You can only review products you've purchased"
+        message: "You can only review products you've purchased",
       });
     }
 
     const existingReview = await Review.findOne({ productId, email });
     if (existingReview) {
       return res.status(400).json({
-        message: "You've already reviewed this product"
+        message: "You've already reviewed this product",
       });
     }
 
@@ -38,22 +42,22 @@ export async function createReview(req, res) {
       productId,
       email,
       rating,
-      comment
+      comment,
     });
 
     await review.save();
 
     res.json({
       message: "Review added successfully",
-      review
+      review,
     });
-
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 }
+
 
 export async function getProductReviews(req, res) {
   try {
@@ -63,7 +67,7 @@ export async function getProductReviews(req, res) {
     res.json(reviews);
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 }
@@ -73,16 +77,16 @@ export async function getAverageRating(req, res) {
     const productId = req.params.productId;
     const result = await Review.aggregate([
       { $match: { productId } },
-      { $group: { _id: null, averageRating: { $avg: "$rating" }, count: { $sum: 1 } } }
+      { $group: { _id: null, averageRating: { $avg: "$rating" }, count: { $sum: 1 } } },
     ]);
 
     res.json({
       averageRating: result[0]?.averageRating || 0,
-      count: result[0]?.count || 0
+      count: result[0]?.count || 0,
     });
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 }
