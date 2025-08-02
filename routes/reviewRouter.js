@@ -1,10 +1,10 @@
 import express from 'express';
-import { addReview, getProductReviews } from '../controllers/reviewController.js';
-import verifyToken from './userRouter.js';
+import { createReview, getProductReviews, getAverageRating } from '../controllers/reviewController.js';
 
 const reviewRouter = express.Router();
 
-reviewRouter.post("/", verifyToken, addReview);
+reviewRouter.post("/", createReview);
 reviewRouter.get("/:productId", getProductReviews);
+reviewRouter.get("/average/:productId", getAverageRating);
 
 export default reviewRouter;
