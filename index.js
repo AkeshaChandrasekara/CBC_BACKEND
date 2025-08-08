@@ -22,6 +22,12 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_URL);
+  next();
+});
 
 mongoose.connect(mongoUrl,{})
 
