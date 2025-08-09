@@ -217,16 +217,17 @@ export async function createPaymentIntent(req, res) {
   }
 
   try {
-    const { amount, name, address, phone, orderedItems } = req.body;
-
-    
+    const { amount, name, address, phone, orderedItems, email, testMode } = req.body;
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount), 
       currency: 'lkr',
+      payment_method_types: ['card'], 
       metadata: {
         customer_name: name,
         customer_address: address,
         customer_phone: phone,
+        customer_email: email,
+        test_mode: testMode ? 'true' : 'false',
         products: JSON.stringify(orderedItems.map(item => ({
           id: item.productId,
           name: item.name,
@@ -236,7 +237,8 @@ export async function createPaymentIntent(req, res) {
     });
 
     res.json({
-      clientSecret: paymentIntent.client_secret
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id
     });
   } catch (error) {
     console.error('Error creating payment intent:', error);
