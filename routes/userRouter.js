@@ -1,6 +1,6 @@
 import express from 'express';
 import { createUser, googleLogin, loginUser, verifyUser ,getAllUsers, deleteUser, toggleBlockUser
-  ,forgotPassword,resetPassword, verifyResetToken
+  ,forgotPassword,resetPassword, verifyResetToken,addToWishlist, removeFromWishlist, getWishlist
  } from '../controllers/userController.js';
 import jwt from 'jsonwebtoken';
 
@@ -39,6 +39,10 @@ userRouter.get("/", verifyToken, verifyUser);
 userRouter.post("/forgot-password", forgotPassword);
 userRouter.post("/reset-password/:token", resetPassword);
 userRouter.get("/verify-reset-token/:token", verifyResetToken);
+
+userRouter.post("/wishlist/add", verifyToken, addToWishlist);
+userRouter.post("/wishlist/remove", verifyToken, removeFromWishlist);
+userRouter.get("/wishlist", verifyToken, getWishlist);
 
 
 export default userRouter;
