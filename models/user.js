@@ -28,7 +28,7 @@ const userSchema = mongoose.Schema({
   },
   profilePicture: {
     type: String,
-    default: "https://static.vecteezy.com/system/resources/thumbnails/048/926/072/small_2x/gold-membership-icon-default-avatar-profile-icon-membership-icon-social-media-user-image-illustration-vector.jpg"
+    default: "https://cdn-icons-png.freepik.com/256/13078/13078024.png"
   },
   wishlist: [{
     type: mongoose.Schema.Types.ObjectId,
