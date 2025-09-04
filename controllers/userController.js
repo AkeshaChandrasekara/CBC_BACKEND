@@ -281,10 +281,11 @@ export async function forgotPassword(req, res) {
       text: `You requested a password reset. Please click the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 1 hour.`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #D4AF37;">Password Reset Request</h2>
+          <h2 style="color: #a52d69ff;">Password Reset Request</h2>
           <p>You requested a password reset for your Crystal Beauty Clear account.</p>
           <p>Please click the button below to reset your password:</p>
-          <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #D4AF37; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0;">
+          <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #a52d69ff; 
+          color: white; text-decoration: none; border-radius: 4px; margin: 20px 0;">
             Reset Password
           </a>
           <p>This link will expire in 1 hour.</p>
