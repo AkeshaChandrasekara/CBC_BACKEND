@@ -249,8 +249,7 @@ export async function forgotPassword(req, res) {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-    
-      return res.json({ message: "If this email exists, a reset link has been sent" });
+      return res.json({ message: "Password reset link sent to email" });
     }
 
     const resetToken = jwt.sign(
@@ -260,56 +259,31 @@ export async function forgotPassword(req, res) {
     );
 
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      service: 'gmail',
       auth: {
-        user: process.env.EMAIL_USERNAME, 
-        pass: process.env.EMAIL_PASSWORD 
-      },
-      tls: {
-        rejectUnauthorized: false
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD
       }
     });
 
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
     
     const mailOptions = {
-      from: `"Crystal Beauty Clear" <${process.env.EMAIL_USERNAME}>`, 
-      to: email, 
+      from: process.env.EMAIL_USERNAME,
+      to: email,
       subject: 'Password Reset Request',
-      text: `You requested a password reset. Please click the following link to reset your password:\n\n${resetUrl}\n\nThis link will expire in 1 hour.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #a52d69ff;">Password Reset Request</h2>
-          <p>You requested a password reset for your Crystal Beauty Clear account.</p>
-          <p>Please click the button below to reset your password:</p>
-          <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #a52d69ff; 
-          color: white; text-decoration: none; border-radius: 4px; margin: 20px 0;">
-            Reset Password
-          </a>
-          <p>This link will expire in 1 hour.</p>
-          <p>If you didn't request this, please ignore this email.</p>
-          <hr>
-          <p style="font-size: 12px; color: #777;">Crystal Beauty Clear Team</p>
-        </div>
-      `
+      html: `<p>Click <a href="${resetUrl}">here</a> to reset your password. Link expires in 1 hour.</p>`
     };
 
     await transporter.sendMail(mailOptions);
     
-    res.json({ 
-      message: "Password reset link sent to email"
-    });
+    res.json({ message: "Password reset link sent to email" });
 
   } catch (error) {
-    console.error('Error in forgotPassword:', error);
-    res.status(500).json({ 
-      message: "Error processing request",
-      error: error.message 
-    });
+    res.status(500).json({ message: "Error sending reset email" });
   }
 }
+
 export async function resetPassword(req, res) {
   const { token } = req.params;
   const { password } = req.body;
@@ -322,7 +296,8 @@ export async function resetPassword(req, res) {
       return res.status(400).json({ message: "Invalid token" });
     }
 
-    user.password = bcrypt.hashSync(password, 10);
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    user.password = hashedPassword;
     await user.save();
 
     res.json({ message: "Password updated successfully" });
@@ -336,7 +311,13 @@ export async function verifyResetToken(req, res) {
   const { token } = req.params;
   
   try {
-    jwt.verify(token, process.env.SECRET);
+    const decoded = jwt.verify(token, process.env.SECRET);
+    const user = await User.findById(decoded.id);
+    
+    if (!user) {
+      return res.json({ valid: false });
+    }
+    
     res.json({ valid: true });
   } catch (error) {
     res.json({ valid: false });
